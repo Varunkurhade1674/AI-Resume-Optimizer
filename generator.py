@@ -37,7 +37,10 @@ class GenerationError(Exception):
 
 def _call_llm(prompt: str, provider: str = "groq", api_key: str = "") -> str:
     """Send a single prompt to the LLM's chat completion endpoint and return raw text."""
-    key_to_use = api_key if api_key else GROQ_API_KEY
+    key_to_use = api_key
+    if not key_to_use and provider == "groq":
+        key_to_use = GROQ_API_KEY
+        
     if not key_to_use:
         raise GenerationError(
             f"API key is not set for {provider}. Please provide it in the UI."
@@ -67,11 +70,16 @@ def _call_llm(prompt: str, provider: str = "groq", api_key: str = "") -> str:
 
 def verify_api_key(provider: str, api_key: str) -> bool:
     """Verify if the provided API key is valid for the given provider by fetching models."""
-    if not api_key:
+    key_to_use = api_key
+    if not key_to_use and provider == "groq":
+        key_to_use = GROQ_API_KEY
+        
+    if not key_to_use:
         return False
+        
     base_url = PROVIDER_URLS.get(provider, PROVIDER_URLS["groq"])
     try:
-        client = OpenAI(api_key=api_key, base_url=base_url)
+        client = OpenAI(api_key=key_to_use, base_url=base_url)
         client.models.list()
         return True
     except Exception:
