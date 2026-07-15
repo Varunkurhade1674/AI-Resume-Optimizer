@@ -24,11 +24,18 @@ PROVIDER_URLS = {
     "gemini": "https://generativelanguage.googleapis.com/v1beta/openai/"
 }
 
+PROVIDER_MODELS = {
+    "groq": GROQ_MODEL,
+    "openai": "gpt-4o",
+    "openrouter": "anthropic/claude-3.5-sonnet",
+    "gemini": "gemini-1.5-pro"
+}
+
 class GenerationError(Exception):
     """Raised when the AI provider fails or returns an unparsable response."""
 
 
-def _call_llm(prompt: str, provider: str = "groq", api_key: str = "", model: str = "") -> str:
+def _call_llm(prompt: str, provider: str = "groq", api_key: str = "") -> str:
     """Send a single prompt to the LLM's chat completion endpoint and return raw text."""
     key_to_use = api_key if api_key else GROQ_API_KEY
     if not key_to_use:
@@ -37,10 +44,10 @@ def _call_llm(prompt: str, provider: str = "groq", api_key: str = "", model: str
         )
 
     base_url = PROVIDER_URLS.get(provider, PROVIDER_URLS["groq"])
+    model_to_use = PROVIDER_MODELS.get(provider, PROVIDER_MODELS["groq"])
 
     try:
         client = OpenAI(api_key=key_to_use, base_url=base_url)
-        model_to_use = model if model else GROQ_MODEL
         response = client.chat.completions.create(
             model=model_to_use,
             messages=[
@@ -80,9 +87,9 @@ def _parse_json(raw_text: str) -> dict:
         raise GenerationError("AI response did not contain valid JSON.")
 
 
-def analyze_ats(resume_text: str, job_description: str, provider: str = "groq", api_key: str = "", model: str = "") -> dict:
+def analyze_ats(resume_text: str, job_description: str, provider: str = "groq", api_key: str = "") -> dict:
     """Run the ATS analysis stage: score, summary, matching/missing skills."""
-    raw = _call_llm(prompts.ats_analysis_prompt(resume_text, job_description), provider, api_key, model)
+    raw = _call_llm(prompts.ats_analysis_prompt(resume_text, job_description), provider, api_key)
     data = _parse_json(raw)
 
     return {
@@ -93,9 +100,9 @@ def analyze_ats(resume_text: str, job_description: str, provider: str = "groq", 
     }
 
 
-def generate_improvements(resume_text: str, job_description: str, provider: str = "groq", api_key: str = "", model: str = "") -> dict:
+def generate_improvements(resume_text: str, job_description: str, provider: str = "groq", api_key: str = "") -> dict:
     """Run the resume improvement stage: suggestions + optimized summary."""
-    raw = _call_llm(prompts.improvement_prompt(resume_text, job_description), provider, api_key, model)
+    raw = _call_llm(prompts.improvement_prompt(resume_text, job_description), provider, api_key)
     data = _parse_json(raw)
 
     return {
@@ -104,26 +111,26 @@ def generate_improvements(resume_text: str, job_description: str, provider: str 
     }
 
 
-def generate_cover_letter(resume_text: str, job_description: str, provider: str = "groq", api_key: str = "", model: str = "") -> str:
+def generate_cover_letter(resume_text: str, job_description: str, provider: str = "groq", api_key: str = "") -> str:
     """Run the cover letter generation stage."""
-    raw = _call_llm(prompts.cover_letter_prompt(resume_text, job_description), provider, api_key, model)
+    raw = _call_llm(prompts.cover_letter_prompt(resume_text, job_description), provider, api_key)
     data = _parse_json(raw)
     return data.get("cover_letter", "").strip()
 
 
-def generate_interview_questions(resume_text: str, job_description: str, provider: str = "groq", api_key: str = "", model: str = "") -> list:
+def generate_interview_questions(resume_text: str, job_description: str, provider: str = "groq", api_key: str = "") -> list:
     """Run the interview question generation stage."""
-    raw = _call_llm(prompts.interview_questions_prompt(resume_text, job_description), provider, api_key, model)
+    raw = _call_llm(prompts.interview_questions_prompt(resume_text, job_description), provider, api_key)
     data = _parse_json(raw)
     return [q.strip() for q in data.get("interview_questions", []) if q.strip()]
 
 
-def run_full_analysis(resume_text: str, job_description: str, provider: str = "groq", api_key: str = "", model: str = "") -> dict:
+def run_full_analysis(resume_text: str, job_description: str, provider: str = "groq", api_key: str = "") -> dict:
     """Run all four generation stages and combine the results into one report."""
-    ats_result = analyze_ats(resume_text, job_description, provider, api_key, model)
-    improvements = generate_improvements(resume_text, job_description, provider, api_key, model)
-    cover_letter = generate_cover_letter(resume_text, job_description, provider, api_key, model)
-    interview_questions = generate_interview_questions(resume_text, job_description, provider, api_key, model)
+    ats_result = analyze_ats(resume_text, job_description, provider, api_key)
+    improvements = generate_improvements(resume_text, job_description, provider, api_key)
+    cover_letter = generate_cover_letter(resume_text, job_description, provider, api_key)
+    interview_questions = generate_interview_questions(resume_text, job_description, provider, api_key)
 
     return {
         **ats_result,
