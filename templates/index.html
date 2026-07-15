@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Resume Optimizer & ATS Analyzer</title>
+<link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-icon">📄</span>
+        <h1>AI Resume Optimizer <span>&amp; ATS Analyzer</span></h1>
+      </div>
+      <p class="tagline">Match your resume to any job in seconds, powered by Llama 3.3</p>
+    </div>
+  </header>
+
+  <main class="layout">
+
+    <!-- LEFT PANEL -->
+    <section class="panel left-panel">
+      <h2>1. Upload &amp; Describe</h2>
+
+      <form id="analyze-form">
+        <label class="field-label" for="candidate_name">Your Name (optional)</label>
+        <input type="text" id="candidate_name" name="candidate_name" placeholder="e.g. Varun" />
+
+        <label class="field-label" for="resume_file">Resume (PDF or DOCX)</label>
+        <div class="dropzone" id="dropzone">
+          <input type="file" id="resume_file" name="resume_file" accept=".pdf,.docx" hidden />
+          <div class="dropzone-content" id="dropzone-content">
+            <span class="dropzone-icon">⬆️</span>
+            <p><strong>Click to upload</strong> or drag &amp; drop</p>
+            <p class="dropzone-hint">PDF or DOCX, max 5MB</p>
+          </div>
+        </div>
+        <p id="file-name" class="file-name"></p>
+
+        <label class="field-label" for="job_description">Job Description</label>
+        <textarea
+          id="job_description"
+          name="job_description"
+          rows="10"
+          placeholder="Paste the full job description here..."
+          required
+        ></textarea>
+
+        <button type="submit" id="analyze-btn" class="primary-btn">
+          <span id="btn-text">Analyze Resume</span>
+          <span id="btn-spinner" class="spinner hidden"></span>
+        </button>
+
+        <p id="error-message" class="error-message hidden"></p>
+      </form>
+    </section>
+
+    <!-- RIGHT PANEL -->
+    <section class="panel right-panel" id="results-panel">
+
+      <div class="results-header">
+        <h2>2. Analysis Report</h2>
+        <div class="results-actions hidden" id="results-actions">
+          <button class="secondary-btn" id="copy-btn">📋 Copy Results</button>
+          <button class="secondary-btn" id="download-btn">⬇️ Download Markdown</button>
+        </div>
+      </div>
+
+      <div id="empty-state" class="empty-state">
+        <span class="empty-icon">🎯</span>
+        <p>Your ATS analysis will appear here after you analyze a resume.</p>
+      </div>
+
+      <div id="results-content" class="results-content hidden">
+
+        <div class="card score-card">
+          <h3>ATS Score</h3>
+          <div class="score-wrap">
+            <div class="score-circle" id="score-circle">
+              <span id="score-value">--</span>
+            </div>
+            <p id="score-label" class="score-label"></p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Resume Summary</h3>
+          <p id="summary-text"></p>
+        </div>
+
+        <div class="card">
+          <h3>✅ Matching Skills</h3>
+          <div id="matching-skills" class="chip-list"></div>
+        </div>
+
+        <div class="card">
+          <h3>⚠️ Missing Skills</h3>
+          <div id="missing-skills" class="chip-list"></div>
+        </div>
+
+        <div class="card">
+          <h3>💡 Improvement Suggestions</h3>
+          <ul id="suggestions-list"></ul>
+        </div>
+
+        <div class="card">
+          <h3>✨ Optimized Professional Summary</h3>
+          <p id="optimized-summary-text"></p>
+        </div>
+
+        <div class="card">
+          <h3>📝 Personalized Cover Letter</h3>
+          <p id="cover-letter-text" class="preformatted"></p>
+        </div>
+
+        <div class="card">
+          <h3>❓ Interview Questions</h3>
+          <ol id="interview-questions-list"></ol>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <p>AI Resume Optimizer &amp; ATS Analyzer &middot; Built with FastAPI + Groq (Llama 3.3)</p>
+  </footer>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
