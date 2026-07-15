@@ -1,5 +1,5 @@
 """
-AI generation layer. Wraps calls to the Groq API (Llama 3.3) and parses the
+AI generation layer. Wraps calls to the LLM API and parses the
 JSON responses produced from the prompt templates in prompts.py.
 """
 
@@ -8,7 +8,7 @@ import json
 import re
 
 from dotenv import load_dotenv
-from groq import Groq
+from openai import OpenAI
 
 import prompts
 
@@ -17,23 +17,32 @@ load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
-_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
-
+PROVIDER_URLS = {
+    "groq": "https://api.groq.com/openai/v1",
+    "openai": "https://api.openai.com/v1",
+    "openrouter": "https://openrouter.ai/api/v1",
+    "gemini": "https://generativelanguage.googleapis.com/v1beta/openai/"
+}
 
 class GenerationError(Exception):
     """Raised when the AI provider fails or returns an unparsable response."""
 
 
-def _call_groq(prompt: str) -> str:
-    """Send a single prompt to Groq's chat completion endpoint and return raw text."""
-    if _client is None:
+def _call_llm(prompt: str, provider: str = "groq", api_key: str = "", model: str = "") -> str:
+    """Send a single prompt to the LLM's chat completion endpoint and return raw text."""
+    key_to_use = api_key if api_key else GROQ_API_KEY
+    if not key_to_use:
         raise GenerationError(
-            "GROQ_API_KEY is not set. Please add it to your .env file."
+            f"API key is not set for {provider}. Please provide it in the UI."
         )
 
+    base_url = PROVIDER_URLS.get(provider, PROVIDER_URLS["groq"])
+
     try:
-        response = _client.chat.completions.create(
-            model=GROQ_MODEL,
+        client = OpenAI(api_key=key_to_use, base_url=base_url)
+        model_to_use = model if model else GROQ_MODEL
+        response = client.chat.completions.create(
+            model=model_to_use,
             messages=[
                 {
                     "role": "system",
@@ -46,7 +55,7 @@ def _call_groq(prompt: str) -> str:
         )
         return response.choices[0].message.content
     except Exception as exc:
-        raise GenerationError(f"Groq API request failed: {exc}") from exc
+        raise GenerationError(f"{provider} API request failed: {exc}") from exc
 
 
 def _parse_json(raw_text: str) -> dict:
@@ -71,9 +80,9 @@ def _parse_json(raw_text: str) -> dict:
         raise GenerationError("AI response did not contain valid JSON.")
 
 
-def analyze_ats(resume_text: str, job_description: str) -> dict:
+def analyze_ats(resume_text: str, job_description: str, provider: str = "groq", api_key: str = "", model: str = "") -> dict:
     """Run the ATS analysis stage: score, summary, matching/missing skills."""
-    raw = _call_groq(prompts.ats_analysis_prompt(resume_text, job_description))
+    raw = _call_llm(prompts.ats_analysis_prompt(resume_text, job_description), provider, api_key, model)
     data = _parse_json(raw)
 
     return {
@@ -84,9 +93,9 @@ def analyze_ats(resume_text: str, job_description: str) -> dict:
     }
 
 
-def generate_improvements(resume_text: str, job_description: str) -> dict:
+def generate_improvements(resume_text: str, job_description: str, provider: str = "groq", api_key: str = "", model: str = "") -> dict:
     """Run the resume improvement stage: suggestions + optimized summary."""
-    raw = _call_groq(prompts.improvement_prompt(resume_text, job_description))
+    raw = _call_llm(prompts.improvement_prompt(resume_text, job_description), provider, api_key, model)
     data = _parse_json(raw)
 
     return {
@@ -95,26 +104,26 @@ def generate_improvements(resume_text: str, job_description: str) -> dict:
     }
 
 
-def generate_cover_letter(resume_text: str, job_description: str) -> str:
+def generate_cover_letter(resume_text: str, job_description: str, provider: str = "groq", api_key: str = "", model: str = "") -> str:
     """Run the cover letter generation stage."""
-    raw = _call_groq(prompts.cover_letter_prompt(resume_text, job_description))
+    raw = _call_llm(prompts.cover_letter_prompt(resume_text, job_description), provider, api_key, model)
     data = _parse_json(raw)
     return data.get("cover_letter", "").strip()
 
 
-def generate_interview_questions(resume_text: str, job_description: str) -> list:
+def generate_interview_questions(resume_text: str, job_description: str, provider: str = "groq", api_key: str = "", model: str = "") -> list:
     """Run the interview question generation stage."""
-    raw = _call_groq(prompts.interview_questions_prompt(resume_text, job_description))
+    raw = _call_llm(prompts.interview_questions_prompt(resume_text, job_description), provider, api_key, model)
     data = _parse_json(raw)
     return [q.strip() for q in data.get("interview_questions", []) if q.strip()]
 
 
-def run_full_analysis(resume_text: str, job_description: str) -> dict:
+def run_full_analysis(resume_text: str, job_description: str, provider: str = "groq", api_key: str = "", model: str = "") -> dict:
     """Run all four generation stages and combine the results into one report."""
-    ats_result = analyze_ats(resume_text, job_description)
-    improvements = generate_improvements(resume_text, job_description)
-    cover_letter = generate_cover_letter(resume_text, job_description)
-    interview_questions = generate_interview_questions(resume_text, job_description)
+    ats_result = analyze_ats(resume_text, job_description, provider, api_key, model)
+    improvements = generate_improvements(resume_text, job_description, provider, api_key, model)
+    cover_letter = generate_cover_letter(resume_text, job_description, provider, api_key, model)
+    interview_questions = generate_interview_questions(resume_text, job_description, provider, api_key, model)
 
     return {
         **ats_result,

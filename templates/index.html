@@ -25,6 +25,22 @@
       <h2>1. Upload &amp; Describe</h2>
 
       <form id="analyze-form">
+        <label class="field-label" for="ai_provider">AI Provider</label>
+        <select id="ai_provider" name="provider" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem; margin-bottom: 1.5rem; outline: none; transition: border-color 0.2s; background-color: #fff;">
+          <option value="groq">Groq</option>
+          <option value="openai">OpenAI</option>
+          <option value="gemini">Gemini</option>
+          <option value="openrouter">OpenRouter</option>
+        </select>
+
+        <label class="field-label" id="api_key_label" for="api_key">Groq API Key (Optional)</label>
+        <input type="password" id="api_key" name="api_key" placeholder="Leave blank to use default key" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem; margin-bottom: 1.5rem; outline: none; transition: border-color 0.2s;" />
+
+        <label class="field-label" for="llm_model">LLM Model</label>
+        <select id="llm_model" name="llm_model" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem; margin-bottom: 1.5rem; outline: none; transition: border-color 0.2s; background-color: #fff;">
+          <!-- Options populated by JS -->
+        </select>
+
         <label class="field-label" for="candidate_name">Your Name (optional)</label>
         <input type="text" id="candidate_name" name="candidate_name" placeholder="e.g. Varun" />
 

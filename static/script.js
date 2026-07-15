@@ -13,6 +13,49 @@ const btnText = document.getElementById("btn-text");
 const btnSpinner = document.getElementById("btn-spinner");
 const errorMessage = document.getElementById("error-message");
 
+const aiProvider = document.getElementById("ai_provider");
+const apiKeyLabel = document.getElementById("api_key_label");
+const llmModel = document.getElementById("llm_model");
+
+const providerModels = {
+  groq: [
+    { value: "llama-3.3-70b-versatile", label: "Llama 3.3 70B Versatile" },
+    { value: "mixtral-8x7b-32768", label: "Mixtral 8x7B" },
+    { value: "gemma2-9b-it", label: "Gemma 2 9B IT" }
+  ],
+  openai: [
+    { value: "gpt-4o", label: "GPT-4o" },
+    { value: "gpt-4o-mini", label: "GPT-4o Mini" },
+    { value: "gpt-4-turbo", label: "GPT-4 Turbo" }
+  ],
+  gemini: [
+    { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
+    { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro" }
+  ],
+  openrouter: [
+    { value: "anthropic/claude-3.5-sonnet", label: "Claude 3.5 Sonnet (Anthropic)" },
+    { value: "meta-llama/llama-3.1-70b-instruct", label: "Llama 3.1 70B (Meta)" },
+    { value: "google/gemini-pro-1.5", label: "Gemini 1.5 Pro (Google)" }
+  ]
+};
+
+function updateModelDropdown() {
+  const provider = aiProvider.value;
+  apiKeyLabel.textContent = `${aiProvider.options[aiProvider.selectedIndex].text} API Key (Optional)`;
+  
+  llmModel.innerHTML = "";
+  providerModels[provider].forEach(model => {
+    const option = document.createElement("option");
+    option.value = model.value;
+    option.textContent = model.label;
+    llmModel.appendChild(option);
+  });
+}
+
+aiProvider.addEventListener("change", updateModelDropdown);
+// Initialize on load
+updateModelDropdown();
+
 const emptyState = document.getElementById("empty-state");
 const resultsContent = document.getElementById("results-content");
 const resultsActions = document.getElementById("results-actions");
@@ -77,6 +120,9 @@ form.addEventListener("submit", async (e) => {
     "candidate_name",
     document.getElementById("candidate_name").value.trim() || "Guest"
   );
+  formData.append("provider", document.getElementById("ai_provider").value);
+  formData.append("api_key", document.getElementById("api_key").value.trim());
+  formData.append("llm_model", document.getElementById("llm_model").value.trim());
 
   setLoading(true);
 

@@ -56,6 +56,9 @@ async def analyze_resume(
     resume_file: UploadFile = File(...),
     job_description: str = Form(...),
     candidate_name: str = Form("Guest"),
+    provider: str = Form("groq"),
+    api_key: str = Form(""),
+    llm_model: str = Form(""),
     db: Session = Depends(get_db),
 ):
     """
@@ -118,7 +121,7 @@ async def analyze_resume(
 
     # Run the AI analysis pipeline (ATS score, improvements, cover letter, questions).
     try:
-        result = generator.run_full_analysis(resume_text, job_description)
+        result = generator.run_full_analysis(resume_text, job_description, provider, api_key, llm_model)
     except generator.GenerationError as exc:
         raise HTTPException(status_code=502, detail=str(exc))
 
