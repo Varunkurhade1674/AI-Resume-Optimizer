@@ -51,6 +51,19 @@ def read_index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
+@app.post("/verify_key")
+async def verify_key(
+    provider: str = Form(...),
+    api_key: str = Form(...),
+):
+    """Verify if the API key works for the selected provider."""
+    is_valid = generator.verify_api_key(provider, api_key)
+    if is_valid:
+        return JSONResponse({"status": "success", "message": "API Key is valid!"})
+    else:
+        raise HTTPException(status_code=400, detail="Invalid API Key or provider.")
+
+
 @app.post("/analyze")
 async def analyze_resume(
     resume_file: UploadFile = File(...),

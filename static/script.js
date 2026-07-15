@@ -24,6 +24,52 @@ aiProvider.addEventListener("change", updateProviderLabel);
 // Initialize on load
 updateProviderLabel();
 
+const verifyKeyBtn = document.getElementById("verify-key-btn");
+const verifySpinner = document.getElementById("verify-spinner");
+const verifyMessage = document.getElementById("verify-message");
+
+verifyKeyBtn.addEventListener("click", async () => {
+  const provider = aiProvider.value;
+  const apiKey = document.getElementById("api_key").value.trim();
+
+  if (!apiKey) {
+    verifyMessage.textContent = "Please enter an API key first.";
+    verifyMessage.style.color = "#dc2626";
+    verifyMessage.classList.remove("hidden");
+    return;
+  }
+
+  verifyKeyBtn.disabled = true;
+  verifySpinner.classList.remove("hidden");
+  verifyMessage.classList.add("hidden");
+
+  const formData = new FormData();
+  formData.append("provider", provider);
+  formData.append("api_key", apiKey);
+
+  try {
+    const response = await fetch("/verify_key", {
+      method: "POST",
+      body: formData,
+    });
+    const data = await response.json();
+    if (response.ok) {
+      verifyMessage.textContent = "✅ Valid API Key!";
+      verifyMessage.style.color = "#16a34a";
+    } else {
+      verifyMessage.textContent = "❌ " + (data.detail || "Invalid API Key.");
+      verifyMessage.style.color = "#dc2626";
+    }
+  } catch (err) {
+    verifyMessage.textContent = "❌ Error verifying key.";
+    verifyMessage.style.color = "#dc2626";
+  } finally {
+    verifyMessage.classList.remove("hidden");
+    verifyKeyBtn.disabled = false;
+    verifySpinner.classList.add("hidden");
+  }
+});
+
 const emptyState = document.getElementById("empty-state");
 const resultsContent = document.getElementById("results-content");
 const resultsActions = document.getElementById("results-actions");

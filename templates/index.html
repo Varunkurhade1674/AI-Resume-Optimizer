@@ -34,7 +34,13 @@
         </select>
 
         <label class="field-label" id="api_key_label" for="api_key">Groq API Key (Optional)</label>
-        <input type="password" id="api_key" name="api_key" placeholder="Leave blank to use default key" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem; margin-bottom: 1.5rem; outline: none; transition: border-color 0.2s;" />
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+          <input type="password" id="api_key" name="api_key" placeholder="Leave blank to use default key" style="flex: 1; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem; outline: none; transition: border-color 0.2s;" />
+          <button type="button" id="verify-key-btn" class="secondary-btn" style="white-space: nowrap; margin: 0; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            Verify Key <span id="verify-spinner" class="spinner hidden" style="width: 14px; height: 14px; border-width: 2px;"></span>
+          </button>
+        </div>
+        <p id="verify-message" style="margin-top: -1rem; margin-bottom: 1.5rem; font-size: 0.85rem;" class="hidden"></p>
 
         <label class="field-label" for="candidate_name">Your Name (optional)</label>
         <input type="text" id="candidate_name" name="candidate_name" placeholder="e.g. Varun" />

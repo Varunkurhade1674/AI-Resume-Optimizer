@@ -27,7 +27,7 @@ PROVIDER_URLS = {
 PROVIDER_MODELS = {
     "groq": GROQ_MODEL,
     "openai": "gpt-4o",
-    "openrouter": "anthropic/claude-3.5-sonnet",
+    "openrouter": "anthropic/claude-sonnet-5",
     "gemini": "gemini-1.5-pro"
 }
 
@@ -63,6 +63,19 @@ def _call_llm(prompt: str, provider: str = "groq", api_key: str = "") -> str:
         return response.choices[0].message.content
     except Exception as exc:
         raise GenerationError(f"{provider} API request failed: {exc}") from exc
+
+
+def verify_api_key(provider: str, api_key: str) -> bool:
+    """Verify if the provided API key is valid for the given provider by fetching models."""
+    if not api_key:
+        return False
+    base_url = PROVIDER_URLS.get(provider, PROVIDER_URLS["groq"])
+    try:
+        client = OpenAI(api_key=api_key, base_url=base_url)
+        client.models.list()
+        return True
+    except Exception:
+        return False
 
 
 def _parse_json(raw_text: str) -> dict:
